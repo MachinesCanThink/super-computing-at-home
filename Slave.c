@@ -97,8 +97,8 @@ void sendResultBack(int new_socket_fd)
  */
 int main(int argc, char* argv[])
 {
-    int socket_fd;	// socket file descriptors into the file descriptor table returned by socket().
-    int new_socket_fd;	// socket file descriptors into the file descriptor table returned by socket().
+    	int socket_fd;	// socket file descriptors into the file descriptor table returned by socket().
+	int new_socket_fd;	// socket file descriptors into the file descriptor table returned by socket().
 	int port_no;	// port number on which the server accepts communication.
 	int client_addr_length;	// address length of client.
 	int n;	// return value from read() or write().
@@ -140,6 +140,6 @@ int main(int argc, char* argv[])
 
 	sendResultBack(new_socket_fd);
 
-    return 0; 
-    // end server 
+    	return 0; 
+    	// end server 
 }
