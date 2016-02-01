@@ -10,7 +10,8 @@
 #include <stdlib.h>
 #include <fcntl.h>
 
-/* error() is called when a syscall fails.
+/* 
+ * error() is called when a syscall fails.
  * Writes the error message in stderr and then aborts.
  */ 
 void error(char* msg)
@@ -19,109 +20,126 @@ void error(char* msg)
 	exit(1);
 }
 
-
-/* Setup server code */
-void setupServer(int portNo, int* sockFd, int* newSockFd, struct sockaddr_in* servAddr, struct sockaddr_in* cliAddr, int cliAddrLength) {
-	*sockFd = socket(AF_INET, SOCK_STREAM, 0); // create server socket
-	if (*sockFd < 0)	
+/* 
+ * Setup server code 
+ */
+void setupServer(int port_no, int* socket_fd, int* new_socket_fd, struct sockaddr_in* server_addr, struct sockaddr_in* client_addr, int client_addr_length) 
+{
+	*socket_fd = socket(AF_INET, SOCK_STREAM, 0); // create server socket
+	if (*socket_fd < 0)	
 		error("server: error opening socket\n");	// flag error is socket() fails
-	/* AF_INET represents a socket in the Internet domain.
+	/* 
+	 * AF_INET represents a socket in the Internet domain.
 	 * SOCK_STREAM represents a stream socket based on TCP.
 	 * 0 is protocol that's automatically chosen by OS. TCP in this case.
 	 */
 
-	bzero((char*)&(*servAddr), sizeof((*servAddr)));	// sets all values in (*servAddr) to zero
+	bzero((char*)&(*server_addr), sizeof((*server_addr)));	// sets all values in (*servAddr) to zero
 
-	(*servAddr).sin_family 	    = AF_INET;	// set addr type to IP.
-	(*servAddr).sin_port 		= htons(portNo);	// convert into network byte order.
-	(*servAddr).sin_addr.s_addr = INADDR_ANY;	// IP address of the server.
+	(*server_addr).sin_family 	    = AF_INET;	// set addr type to IP.
+	(*server_addr).sin_port 		= htons(port_no);	// convert into network byte order.
+	(*server_addr).sin_addr.s_addr = INADDR_ANY;	// IP address of the server.
 
-	if (bind(*sockFd, (struct sockaddr*) &(*servAddr), sizeof((*servAddr))) < 0)
+	if (bind(*socket_fd, (struct sockaddr*) &(*server_addr), sizeof((*server_addr))) < 0)
 		error("server: error on binding");	
-	/* The bind() syscall binds a socket to an address,
+	/* 
+	 * The bind() syscall binds a socket to an address,
 	 * in this case the address of the current host and port number on which the server will run. 
 	 * It takes three arguments:
 	 * the socket file descriptor, the address to which is bound, and the size of the address to which it is bound.
 	 */
 
-	listen(*sockFd, 5);	// allows the process to listen on the socket for connections.
+	listen(*socket_fd, 5);	// allows the process to listen on the socket for connections.
 
-	cliAddrLength = sizeof((*cliAddr));
+	client_addr_length = sizeof((*client_addr));
 
-	/* The accept() system call causes the process to block until a client connects to the server. 
+	/* 
+	 * The accept() system call causes the process to block until a client connects to the server. 
 	 * Thus, it wakes up the process when a connection from a client has been successfully established.
 	 */
-	*newSockFd = accept(*sockFd, (struct sockaddr*) &(*cliAddr), &cliAddrLength);
-	if (*newSockFd < 0)
+	*new_socket_fd = accept(*socket_fd, (struct sockaddr*) &(*client_addr), &client_addr_length);
+	if (*new_socket_fd < 0)
 		error("server: error on accept");
 }
 
-/* Interprets recieved python script by calling system().
+/* 
+ * Interprets recieved python script by calling system().
  * Writes output to a file.
  */
-void interpretPython(int pyFd) {
-	int pyResultFd = open("PyResult", O_WRONLY);
+void interpretPython(int python_fd) 
+{
+	int python_result_fd = open("PyResult", O_WRONLY);
 	char command[] = "python PyScript.py > PyResult";
 	system(command);
-	close(pyResultFd);
+	close(python_result_fd);
 }
 
-/* PyResult is sent back. */
-void sendResultBack(int newSockFd) {
+/*
+ * PyResult is sent back.
+ */ 
+void sendResultBack(int new_socket_fd) 
+{
 	char buffer[256];
-	int pyResultFd = open("PyResult", O_RDONLY);
-	int n = read(pyResultFd, buffer, 255);
-	if (n < 0){
+	int python_result_fd = open("PyResult", O_RDONLY);
+	int n = read(python_result_fd, buffer, 255);
+	if (n < 0) {
 		fprintf(stderr, "Server: error reading\n");
 		exit(1);
 	}
 	buffer[n] = '\0';
 
-	/* Write to socket */
-	n = write(newSockFd, buffer, 255);
+	// Write to socket 
+	n = write(new_socket_fd, buffer, 255);
 }
 
-/* Slave main */
+/* 
+ * Slave main 
+ */
 int main(int argc, char* argv[])
 {
-    int sockFd, newSockFd;	// socket file descriptors into the file descriptor table returned by socket().
-	int portNo;	// port number on which the server accepts communication.
-	int cliAddrLength;	// address length of client.
+    int socket_fd;	// socket file descriptors into the file descriptor table returned by socket().
+    int new_socket_fd;	// socket file descriptors into the file descriptor table returned by socket().
+	int port_no;	// port number on which the server accepts communication.
+	int client_addr_length;	// address length of client.
 	int n;	// return value from read() or write().
 	char buffer[256];	// server reads characters from the socket into this buffer.
-	int pyFd;
-	struct sockaddr_in servAddr, cliAddr;	// structures to hold IP.
+	int python_fd;
+	struct sockaddr_in server_addr;	// structures to hold IP.
+	struct sockaddr_in client_addr;	// structures to hold IP.
 
-	if (argc < 2)	// flag error if port number is provided.
-	{
+	if (argc < 2) {	
+		// flag error if port number is provided.
 		fprintf(stderr, "server: error, no port provided as command line arg\n");
 		exit(1);
 	}
 
-	portNo = atoi(argv[1]);	// passed port number from ASCII to int.
+	port_no = atoi(argv[1]);	// passed port number from ASCII to int.
 
-	setupServer(portNo, &sockFd, &newSockFd, &servAddr, &cliAddr, cliAddrLength);
+	setupServer(port_no, &socket_fd, &new_socket_fd, &server_addr, &client_addr, client_addr_length);
 
-	/* Read from client established by accepting on newSockFd. 
+	/* 
+	 * Read from client established by accepting on newSockFd. 
 	 * Print the message on stdout.
 	 */
-	n = read(newSockFd, buffer, 255);
+	n = read(new_socket_fd, buffer, 255);
 	if (n < 0)
 		error("server: error reading from socket");
 
 
-	/* Read python script from buffer to file. */
-	pyFd = open("PyScript.py", O_WRONLY);
-	n = write(pyFd, buffer, 255);
+	/* 
+	 * Read python script from buffer to file. 
+	 */
+	python_fd = open("PyScript.py", O_WRONLY);
+	n = write(python_fd, buffer, 255);
 	if (n < 0) {
 		fprintf(stderr, "Server: write error.\n");
 		exit(1);
 	}
 
-	interpretPython(pyFd);
+	interpretPython(python_fd);
 
-	sendResultBack(newSockFd);
+	sendResultBack(new_socket_fd);
 
     return 0; 
-    /* end server */
+    // end server 
 }
