@@ -1,0 +1,12 @@
+level 0:
+module_samplename > module_textsample, module_textsample2
+module_samplename2 > module_textsample3
+level 1:
+module_textsample > module_sample1, module_sample2
+module_textsample2 > module_sample3
+module_textsample3 > module_sample4
+level 2:
+module_sample1 
+module_sample2
+module_sample3
+module_sample4
