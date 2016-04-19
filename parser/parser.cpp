@@ -23,7 +23,7 @@ int getLevelCount(vector<string>&);
 int getModuleCount(vector<string>&);
 void getModuleNames(vector<string>&, vector<string>&);
 void getNumberOfDepends(vector<string>&, int*, int);
-
+int checkForErrors(vetor<string>&);
 int main(int argc, char *argv[])
 {
         int level_count;
@@ -167,4 +167,28 @@ void readFileToString(char *file_name, vector<string> &lines_from_file)
                         lines_from_file.push_back(line);
                 }
         }
+}
+
+
+int checkForErrors(vector<string> &lines_from_file)
+{
+	int iterator;
+	regex levelcheckpattern("(level)[0-9]+:");
+	regex multidependentmodule("(module_)[A-Za-z0-9]+>((module_)[A-Za-z0-9]+,)+");
+	regex singledependentmodule("(module_"[A-Za-z0-9]+);
+	for(iterator = 0; iterator < lines_from_file.size(); iterator++){
+		if(regex_match(lines_from_file[iterator],multidependentmodule)){
+		}
+		else if(regex_match(lines_from_file[iterator],singledependentmodule)){
+		}
+		else{
+			if(regex_match(lines_from_file[iterator],levelcheckpattern)){
+			}
+			else{
+				cout<<"error in the file";
+				return 0;                               //On failure//
+			}
+		}
+	}
+return 1;                                                               //On Success//
 }
