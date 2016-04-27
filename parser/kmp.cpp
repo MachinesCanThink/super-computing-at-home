@@ -6,8 +6,9 @@
 using namespace std;
 
 int kmpSearch(string, string);
-void computeLongestPrefix(string, int, int*);
 int kmpSearch(string, string, vector<string>&);
+int kmpSearch(string, string, vector<string>&, int);
+void computeLongestPrefix(string, int, int*);
 
 extern int KMP_FLAG;
 
@@ -53,6 +54,81 @@ int kmpSearch(string text, string pattern)
         free(longest_proper_prefix);
 
         return counter_for_line;
+}
+
+int kmpSearch(string text, string pattern, vector<string> &depends_module_names, int)
+{
+        int iterator;
+        int length_of_text;
+        int length_of_pattern;
+        int *longest_proper_prefix;
+        int counter_for_line;
+        int match;
+        int index_pattern;
+        int index_text;
+        int index_module_name;
+        int iterator2;
+
+        length_of_text = text.length();
+        length_of_pattern = pattern.length();
+        counter_for_line = 0;
+        match = 0;
+        index_text = 0;
+        index_pattern = 0;
+        index_module_name = 0;
+
+        longest_proper_prefix = (int*) malloc(sizeof(int) * length_of_pattern);
+
+        while (index_text < length_of_text) {
+                if (pattern[index_pattern] == text[index_text]) {
+                        index_pattern++;
+                        index_text++;
+                }
+                if (index_pattern == length_of_pattern) {
+                        index_module_name = index_text - index_pattern;
+                        counter_for_line++;
+
+                        if (counter_for_line == 1) {
+                                for (iterator2 = index_module_name; iterator2 < text.size(); iterator2++) {
+                                        if (text[iterator2] == '>')
+                                                break;
+
+                                        depends_module_names[counter_for_line - 1].push_back(text[iterator2]);
+                                }
+                        } else if (counter_for_line > 1) {
+                                for (iterator2 = index_module_name; iterator2 < text.size(); iterator2++) {
+                                        if (text[iterator2] == ',')
+                                                break;
+
+                                        depends_module_names[counter_for_line - 1].push_back(text[iterator2]);
+                                }
+                        }
+
+                        /*
+                        for (int index = index_module_name; index < text.size(); index++) {
+                                if (text[index] == '>')
+                                        break;
+
+                                module_name.push_back(text[index]);
+                        }
+
+                        modules.push_back(module_name);
+                        */
+
+                        match = 1;
+
+                        index_pattern = longest_proper_prefix[index_pattern - 1];
+                } else if ((index_text < length_of_text) && (pattern[index_pattern] != text[index_text])) {
+                        if (index_pattern != 0)
+                                index_pattern = longest_proper_prefix[index_pattern - 1];
+                        else
+                                index_text = index_text + 1;
+                }
+        }
+
+        free(longest_proper_prefix);
+
+        return match;
 }
 
 int kmpSearch(string text, string pattern, vector<string> &modules)

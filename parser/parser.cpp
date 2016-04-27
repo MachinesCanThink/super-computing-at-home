@@ -17,13 +17,16 @@ int KMP_FLAG;
 
 extern int kmpSearch(string, string);
 extern int kmpSearch(string, string, vector<string>&);
+extern int kmpSearch(string, string, vector<string>&, int);
 
 void readFileToString(char*, vector<string>&);
 int getLevelCount(vector<string>&);
 int getModuleCount(vector<string>&);
 void getModuleNames(vector<string>&, vector<string>&);
 void getNumberOfDepends(vector<string>&, int*, int);
-int checkForErrors(vetor<string>&);
+void getDependsModuleNames(vector<string>&, vector< vector<string> >&);
+int checkForErrors(vector<string>&);
+
 int main(int argc, char *argv[])
 {
         int level_count;
@@ -33,6 +36,8 @@ int main(int argc, char *argv[])
 
         vector<string> lines_from_file;
         vector<string> module_names;
+        // A 2D vector.
+        vector< vector<string> > depend_modules;
 
         map<int, string> map_module_names;
 
@@ -60,13 +65,50 @@ int main(int argc, char *argv[])
 
         cout <<endl <<endl;
 
-        getNumberOfDepends(lines_from_file, temp_array, module_count + level_count);
+        // Size the first dimention of the 2D vector of strings.
+        depend_modules.resize(module_count);
+
+        getNumberOfDepends(lines_from_file, num_deps, module_count + level_count);
+
+        // Size the second dimention of the 2D vector of strings.
+        for (iterator = 0; iterator < module_count; iterator++) {
+        	depend_modules[iterator].resize(num_deps[iterator] + 1);
+        }
 
         for (iterator = 0; iterator < module_count; iterator++) {
                 cout <<"Module: " <<map_module_names[iterator] << ":: Number of Dependencies: " <<num_deps[iterator] <<endl;
         }
 
+        getDependsModuleNames(lines_from_file, depend_modules);
+
+        cout <<endl;
+
+        for (iterator = 0; iterator < depend_modules.size(); iterator++) {
+        	for (iterator2 = 0; iterator2 < depend_modules[iterator].size(); iterator2++) {
+        		if (iterator2 == 0)
+        			cout <<"Module: " <<depend_modules[iterator][iterator2] <<" --> ";
+        		else
+        			cout <<depend_modules[iterator][iterator2] <<"   ";
+        	}
+
+        	cout <<endl;
+        }
+
         return 0;
+}
+
+void getDependsModuleNames(vector<string> &lines_from_file, vector< vector<string> > &depend_modules)
+{
+	int iterator;
+	int iterator2;
+	string pattern;
+
+	pattern = "module";
+
+	for (iterator = 0, iterator2 = 0; iterator < lines_from_file.size(); iterator++) {
+		if ((kmpSearch(lines_from_file[iterator], pattern, depend_modules[iterator2], 1)))
+			iterator2++;
+	}
 }
 
 void getNumberOfDepends(vector<string> &lines_from_file, int num_depends[], int required_size)
@@ -168,7 +210,6 @@ void readFileToString(char *file_name, vector<string> &lines_from_file)
                 }
         }
 }
-
 
 int checkForErrors(vector<string> &lines_from_file)
 {
