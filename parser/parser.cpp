@@ -215,8 +215,8 @@ int checkForErrors(vector<string> &lines_from_file)
 {
 	int iterator;
 	regex levelcheckpattern("(level)[0-9]+:");
-	regex multidependentmodule("(module_)[A-Za-z0-9]+>((module_)[A-Za-z0-9]+,)+");
-	regex singledependentmodule("(module_"[A-Za-z0-9]+);
+	regex multidependentmodule("[A-Za-z0-9]+>([A-Za-z0-9]+,)+");
+	regex singledependentmodule("[A-Za-z0-9]+");
 	for(iterator = 0; iterator < lines_from_file.size(); iterator++){
 		if(regex_match(lines_from_file[iterator],multidependentmodule)){
 		}
