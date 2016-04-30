@@ -6,7 +6,7 @@
 using namespace std;
 
 int kmpSearch(string, string);
-int kmpSearch(string, string, vector<string>&);
+int kmpSearch(string, string, vector<string>&, vector<int>&, int&);
 int kmpSearch(string, string, vector<string>&, int);
 void computeLongestPrefix(string, int, int*);
 
@@ -131,7 +131,7 @@ int kmpSearch(string text, string pattern, vector<string> &depends_module_names,
         return match;
 }
 
-int kmpSearch(string text, string pattern, vector<string> &modules)
+int kmpSearch(string text, string pattern, vector<string> &modules, vector<int> &level_of_modules, int &counter)
 {
         int length_of_text = text.length();
         int length_of_pattern = pattern.length();
@@ -168,6 +168,8 @@ int kmpSearch(string text, string pattern, vector<string> &modules)
 
                         modules.push_back(module_name);
 
+                        level_of_modules.push_back(counter);
+
                         match = 1;
 
                         break;
@@ -182,6 +184,9 @@ int kmpSearch(string text, string pattern, vector<string> &modules)
         }
 
         free(longest_proper_prefix);
+
+        if (match == 0)
+                counter++;
 
         return match;
 }
