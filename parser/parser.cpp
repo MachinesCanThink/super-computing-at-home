@@ -117,7 +117,8 @@ int main(int argc, char *argv[])
         initVector(level_count, num_modules_in_level);
 
         // Add contents to the vector.
-        status = fillVector(depend_modules, level_of_modules, module_names, map_module_names_version2, num_deps);
+        // The below code has been commented because it isn't finished yet. work in progress.
+        //status = fillVector(depend_modules, level_of_modules, module_names, map_module_names_version2, num_deps);
 
         cout <<status <<endl;
 
