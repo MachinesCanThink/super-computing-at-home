@@ -63,6 +63,11 @@ int main(int argc, char *argv[])
 
         getModuleNames(lines_from_file, module_names, level_of_modules);
 
+        getNumberOfModulesInLevels(level_of_modules, num_modules_in_level);
+
+        // Initialize the vector.
+        initVector(level_count, num_modules_in_level);
+
         for (iterator = 0; iterator < module_names.size(); iterator++) {
             map_module_names[iterator] = module_names[iterator];
         	map_module_names_version2[module_names[iterator]] = iterator;
@@ -106,21 +111,18 @@ int main(int argc, char *argv[])
         	cout <<endl;
         }
 
-        getNumberOfModulesInLevels(level_of_modules, num_modules_in_level);
+        
 
         // DEBUG CODE
         cout <<"The number of modules in each level --" <<endl;
         for (iterator = 0; iterator < num_modules_in_level.size(); iterator++)
         	cout <<"Level " <<iterator << " : " <<num_modules_in_level[iterator] <<endl;
 
-        // Initialize the vector.
-        initVector(level_count, num_modules_in_level);
-
         // Add contents to the vector.
         // The below code has been commented because it isn't finished yet. work in progress.
         //status = fillVector(depend_modules, level_of_modules, module_names, map_module_names_version2, num_deps);
 
-        cout <<status <<endl;
+        //cout <<status <<endl;
 
         return 0;
 }
