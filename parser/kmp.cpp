@@ -8,6 +8,7 @@ using namespace std;
 int kmpSearch(string, string);
 int kmpSearch(string, string, vector<string>&, vector<int>&, int&);
 int kmpSearch(string, string, vector<string>&, int);
+int kmpSearch(string, string, int&);
 void computeLongestPrefix(string, int, int*);
 
 extern int KMP_FLAG;
@@ -56,7 +57,56 @@ int kmpSearch(string text, string pattern)
         return counter_for_line;
 }
 
-int kmpSearch(string text, string pattern, vector<string> &depends_module_names, int)
+int kmpSearch(string text, string pattern, int &counter)
+{
+        int match;
+        int length_of_text = text.length();
+        int length_of_pattern = pattern.length();
+
+        int *longest_proper_prefix = (int*) malloc(sizeof(int) * length_of_pattern);
+
+        int index_pattern;
+        int index_text;
+        int index_module_name;
+
+        string module;
+
+        computeLongestPrefix(pattern, length_of_pattern, longest_proper_prefix);
+
+        index_text = 0;
+        index_pattern = 0;
+        match = 0;
+
+        while (index_text < length_of_text) {
+                if (pattern[index_pattern] == text[index_text]) {
+                        index_pattern++;
+                        index_text++;
+                }
+
+                if (index_pattern == length_of_pattern) {
+                        index_module_name = index_text - index_pattern;
+
+                        cout <<index_module_name <<endl;
+
+                        counter++;
+
+                        match = 1;
+
+                        index_pattern = longest_proper_prefix[index_pattern - 1];
+                } else if ((index_text < length_of_text) && (pattern[index_pattern] != text[index_text])) {
+                        if (index_pattern != 0)
+                                index_pattern = longest_proper_prefix[index_pattern - 1];
+                        else
+                                index_text = index_text + 1;
+                }
+        }
+
+        free(longest_proper_prefix);
+
+        return match;
+}
+
+int kmpSearch(string text, string pattern, vector<string> &depends_module_names, int i)
 {
         int iterator;
         int length_of_text;
@@ -162,8 +212,8 @@ int kmpSearch(string text, string pattern, vector<string> &modules, vector<int> 
                         for (int index = index_module_name; index < text.size(); index++) {
                                 if (text[index] == '>')
                                         break;
-
-                                module_name.push_back(text[index]);
+                                if (text[index] != ' ')
+                                        module_name.push_back(text[index]);
                         }
 
                         modules.push_back(module_name);

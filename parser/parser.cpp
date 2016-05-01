@@ -16,19 +16,23 @@ using namespace std;
 int KMP_FLAG;
 
 extern int kmpSearch(string, string);
+extern int kmpSearch(string, string, int&);
 extern int kmpSearch(string, string, vector<string>&, vector<int>&, int&);
 extern int kmpSearch(string, string, vector<string>&, int);
-extern void initVector(int, vector<int>);
+
+extern void declareVector(int, vector<int>);
 extern int fillVector(vector< vector<string> >, vector<int>, vector<string>, map<string, int>, int*);
 
 void readFileToString(char*, vector<string>&);
 int getLevelCount(vector<string>&);
 int getModuleCount(vector<string>&);
-void getModuleNames(vector<string>&, vector<string>&, vector<int>&);
+void getModuleNamesAndLevels(vector<string>&, vector<string>&, vector<int>&);
+void getDependsOnModulesNumber(vector<string>, vector<string>, map<string, int>&);
 void getNumberOfDepends(vector<string>&, int*, int);
 void getDependsModuleNames(vector<string>&, vector< vector<string> >&);
-void getNumberOfModulesInLevels(vector<int>&, vector<int>&);
+void getNumberOfModulesInEachLevel(vector<int>&, vector<int>&);
 int checkForErrors(vector<string>&);
+void createNameToIdMap(map<string, int>&, vector<string>);
 
 int main(int argc, char *argv[])
 {
@@ -40,94 +44,84 @@ int main(int argc, char *argv[])
 
         vector<string> lines_from_file;
         vector<string> module_names;
-        vector<int> level_of_modules;
+        vector<int> module_level;
         vector<int> num_modules_in_level;
-        // A 2D vector.
-        vector< vector<string> > depend_modules;
 
-        map<int, string> map_module_names;
-        map<string, int> map_module_names_version2;
+        map<string, int> modulename_to_moduleid_map;
+        map<string, int> number_of_dependencies;
 
-        int *num_deps;
+        readFileToString(argv[1], lines_from_file); // copies file contents line by line into vector of strings
 
-        readFileToString(argv[1], lines_from_file);
-
+        /* 
+         * Step 1 of parser algorithm.
+         * Get level_count. 
+         */
         level_count = getLevelCount(lines_from_file);
+
+        /* 
+         * Stores the names of modules from .flow into a vector<string>.
+         * Correspondingly, module_level is populated correspondingly, as per module_names.
+         */
+        getModuleNamesAndLevels(lines_from_file, module_names, module_level);
+
+        /* Gets the number od modules in each level. */
+        getNumberOfModulesInEachLevel(module_level, num_modules_in_level);
+
+        /* 
+         * Step 2 of parser algorithm.
+         * Declare the df-graph.
+         */
+        declareVector(level_count, num_modules_in_level);
+
+        /* 
+         * Next step is to populate the df_graph. 
+         * Create hashtable of module names and ids first.
+         */
+        createNameToIdMap(modulename_to_moduleid_map, module_names);
+
         module_count = getModuleCount(lines_from_file);
 
         //DEBUG CODE
-        cout <<"Levels = " <<level_count <<endl;
-        cout <<"Total number of modules = " <<module_count <<endl;
+        cout << "Levels = " << level_count << endl;
+        cout << "Total number of modules = " << module_count <<endl;
 
-        num_deps = (int*) calloc(module_count, sizeof(int));
+        /*
+         * The function getDependsOnModulesNumber() obtains the number of modules a perticular
+         * module x is dependent on.
+         */
+        getDependsOnModulesNumber(lines_from_file, module_names, number_of_dependencies);
 
-        getModuleNames(lines_from_file, module_names, level_of_modules);
-
-        getNumberOfModulesInLevels(level_of_modules, num_modules_in_level);
-
-        // Initialize the vector.
-        initVector(level_count, num_modules_in_level);
-
-        for (iterator = 0; iterator < module_names.size(); iterator++) {
-            map_module_names[iterator] = module_names[iterator];
-        	map_module_names_version2[module_names[iterator]] = iterator;
+        for (int i = 0; i < number_of_dependencies.size(); i++) {
+        	cout <<"Module: " <<module_names[i] <<" --> " <<number_of_dependencies[module_names[i]] <<endl;
         }
-
-        // DEBUG CODE
-        for (iterator = 0; iterator < map_module_names.size(); iterator++) {
-               cout <<"Module: " <<map_module_names[iterator] <<":level = " <<level_of_modules[iterator] <<endl;
-        }
-
-        //cout <<endl <<endl;
-
-        // Size the first dimention of the 2D vector of strings.
-        depend_modules.resize(module_count);
-
-        getNumberOfDepends(lines_from_file, num_deps, module_count + level_count);
-
-        // Size the second dimention of the 2D vector of strings.
-        for (iterator = 0; iterator < module_count; iterator++) {
-        	depend_modules[iterator].resize(num_deps[iterator] + 1);
-        }
-
-        // DEBUG CODE
-        for (iterator = 0; iterator < module_count; iterator++) {
-                cout <<"Module: " <<map_module_names[iterator] << ":: Number of Dependencies: " <<num_deps[iterator] <<endl;
-        }
-
-        getDependsModuleNames(lines_from_file, depend_modules);
-
-        cout <<endl;
-
-        // DEBUG CODE
-        for (iterator = 0; iterator < depend_modules.size(); iterator++) {
-        	for (iterator2 = 0; iterator2 < depend_modules[iterator].size(); iterator2++) {
-        		if (iterator2 == 0)
-        			cout <<"Module: " <<depend_modules[iterator][iterator2] <<" --> ";
-        		else
-        			cout <<depend_modules[iterator][iterator2] <<"   ";
-        	}
-
-        	cout <<endl;
-        }
-
-        
-
-        // DEBUG CODE
-        cout <<"The number of modules in each level --" <<endl;
-        for (iterator = 0; iterator < num_modules_in_level.size(); iterator++)
-        	cout <<"Level " <<iterator << " : " <<num_modules_in_level[iterator] <<endl;
-
-        // Add contents to the vector.
-        // The below code has been commented because it isn't finished yet. work in progress.
-        //status = fillVector(depend_modules, level_of_modules, module_names, map_module_names_version2, num_deps);
-
-        //cout <<status <<endl;
 
         return 0;
 }
 
-void getNumberOfModulesInLevels(vector<int> &level_of_modules, vector<int> &num_modules_in_level)
+void getDependsOnModulesNumber(vector<string> lines_from_file, vector<string> module_names, map<string, int> &number_of_dependencies)
+{
+	int iterator;
+	int iterator2;
+	int counter = 0;
+
+	for (iterator = 0; iterator < module_names.size(); iterator++) {
+		for (iterator2 = 0; iterator2 < lines_from_file.size(); iterator2++) {
+			if ((kmpSearch(lines_from_file[iterator2], module_names[iterator], counter))) {
+				//cout <<"Module name: " <<module_names[iterator] <<" --> " <<counter <<endl;
+			}
+		}
+
+		number_of_dependencies[module_names[iterator]] = counter - 1;
+		counter = 0;
+	}
+}
+
+void createNameToIdMap(map<string, int> &modulename_to_moduleid_map, vector<string> module_names) {
+    for (int iterator = 0; iterator < module_names.size(); iterator++)  // hashtable 
+        modulename_to_moduleid_map[module_names[iterator]] = iterator;
+}
+
+void getNumberOfModulesInEachLevel(vector<int> &module_level, vector<int> &num_modules_in_level)
 {
 	int iterator;
 	int iterator2;
@@ -137,10 +131,10 @@ void getNumberOfModulesInLevels(vector<int> &level_of_modules, vector<int> &num_
 	iterator2 = 0;
 
 
-	for (iterator = 0; iterator < level_of_modules.size(); iterator++) {
-		if (iterator2 == level_of_modules[iterator]) {
+	for (iterator = 0; iterator < module_level.size(); iterator++) {
+		if (iterator2 == module_level[iterator]) {
 			counter++;
-		} else if (level_of_modules[iterator] > iterator2) {
+		} else if (module_level[iterator] > iterator2) {
 			iterator2++;
 			num_modules_in_level.push_back(counter);
 			counter = 1;
@@ -207,7 +201,7 @@ int getModuleCount(vector<string> &lines_from_file)
         KMP_FLAG = KMP_MODULES;
 
         counter = 0;
-        pattern = "module";
+        pattern = "module"; // restricting module naming?
 
         for (iterator = 0; iterator < lines_from_file.size(); iterator++) {
                 counter = counter + kmpSearch(lines_from_file[iterator], pattern);
@@ -216,7 +210,7 @@ int getModuleCount(vector<string> &lines_from_file)
         return counter;
 }
 
-void getModuleNames(vector<string> &lines_from_file, vector<string> &module_names, vector<int> &level_of_modules)
+void getModuleNamesAndLevels(vector<string> &lines_from_file, vector<string> &module_names, vector<int> &module_level)
 {
         string pattern;
         int iterator;
@@ -230,7 +224,7 @@ void getModuleNames(vector<string> &lines_from_file, vector<string> &module_name
         counter = -1;
 
         for (iterator = 0; iterator < lines_from_file.size(); iterator++) {
-                if (kmpSearch(lines_from_file[iterator], pattern, module_names, level_of_modules, counter)) {
+                if (kmpSearch(lines_from_file[iterator], pattern, module_names, module_level, counter)) {
                         ;
                 }
         }
@@ -248,7 +242,7 @@ int getLevelCount(vector<string> &lines_from_file)
         counter = 0;
 
         for (iterator = 0; iterator < lines_from_file.size(); iterator++) {
-                counter = counter + kmpSearch(lines_from_file[iterator], pattern);
+                counter += kmpSearch(lines_from_file[iterator], pattern);
         }
 
         return counter;
