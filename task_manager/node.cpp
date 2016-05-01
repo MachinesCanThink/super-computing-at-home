@@ -15,10 +15,10 @@ typedef struct node
 
 	vector<int> dep_id;
 
-	string module_name;
+	//string module_name;
 } node;
 
-void initVector(int, vector<int>);
+void declareVector(int, vector<int>);
 int fillVector(vector< vector<string> >, vector<int>, vector<string>, map<string, int>, int[]);
 
 vector<int> num_modules_in_levels;
@@ -26,7 +26,7 @@ int num_levels;
 
 vector< vector<node> >  task_vector;
 
-void initVector(int level_count, vector<int> modules_in_level) 
+void declareVector(int level_count, vector<int> modules_in_level) 
 {
 	int iterator;
 	int counter;
@@ -44,7 +44,7 @@ void initVector(int level_count, vector<int> modules_in_level)
 	}
 }
 
-int fillVector(vector< vector<string> > depend_modules, vector<int> level_details, vector<string> module_names, map<string, int> module_name_and_id, int num_deps[])
+int Vector(vector< vector<string> > depend_modules, vector<int> level_details, vector<string> module_names, map<string, int> module_name_and_id, int num_deps[])
 {
 	int iterator;
 	int iterator2;
@@ -55,18 +55,15 @@ int fillVector(vector< vector<string> > depend_modules, vector<int> level_detail
 	counter1 = 0;
 
 	for (iterator = 0; iterator < num_levels; iterator++) {
-		for (iterator2 = 0; iterator2 < num_modules_in_levels[counter]; iterator2++) {
-			task_vector[iterator][iterator2].module_name = module_names[counter1];
+		for (iterator2 = 0; iterator2 < num_modules_in_levels[counter]; iterator2++, counter1++) {
 			task_vector[iterator][iterator2].module_id = module_name_and_id[module_names[counter1]];
+
 			task_vector[iterator][iterator2].level = level_details[counter1];
-			task_vector[iterator][iterator2].num_dependencies = num_deps[counter1];
 			
-			/*for (int i = 0; i < depend_modules.size(); i++) {
-				for (int j = 1; j < depend_modules[i].size(); j++) {
-					task_vector[iterator][iterator2].dep_id[j] = module_name_and_id[depend_modules[i][j]];
-				}
-			}*/
+			task_vector[iterator][iterator2].num_dependencies = num_deps[counter1];
 		}
+
+		counter++;
 	}
 
 	return 1;
