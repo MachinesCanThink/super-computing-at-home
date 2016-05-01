@@ -1,12 +1,12 @@
 level 0:
-module_samplename > module_textsample, module_textsample2
-module_samplename2 > module_textsample3
+module_samplename > module_textsample, module_textblah
+module_sampleblah > module_texter
 level 1:
-module_textsample > module_sample1, module_sample2
-module_textsample2 > module_sample3
-module_textsample3 > module_sample4
+module_textsample > module_sample_cod, module_samplenothing
+module_textblah > module_samplepod, module_sample_mod
+module_texter > module_sample_mod
 level 2:
-module_sample1 
-module_sample2
-module_sample3
-module_sample4
+module_sample_cod
+module_samplenothing
+module_samplepod
+module_sample_mod
