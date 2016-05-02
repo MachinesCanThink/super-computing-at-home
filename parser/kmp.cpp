@@ -86,8 +86,6 @@ int kmpSearch(string text, string pattern, int &counter)
                 if (index_pattern == length_of_pattern) {
                         index_module_name = index_text - index_pattern;
 
-                        cout <<index_module_name <<endl;
-
                         counter++;
 
                         match = 1;
