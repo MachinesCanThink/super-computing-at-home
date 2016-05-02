@@ -21,18 +21,22 @@ extern int kmpSearch(string, string, vector<string>&, vector<int>&, int&);
 extern int kmpSearch(string, string, vector<string>&, int);
 
 extern void declareVector(int, vector<int>);
-extern int fillVector(vector< vector<string> >, vector<int>, vector<string>, map<string, int>, int*);
+extern void printVector(void);
+extern int fillVector(vector< vector<string> >, vector<int>, vector<string>, map<string, int>, map<string, int>);
 
 void readFileToString(char*, vector<string>&);
-int getLevelCount(vector<string>&);
-int getModuleCount(vector<string>&);
+void createNameToIdMap(map<string, int>&, vector<string>);
 void getModuleNamesAndLevels(vector<string>&, vector<string>&, vector<int>&);
 void getDependsOnModulesNumber(vector<string>, vector<string>, map<string, int>&);
 void getNumberOfDepends(vector<string>&, int*, int);
 void getDependsModuleNames(vector<string>&, vector< vector<string> >&);
 void getNumberOfModulesInEachLevel(vector<int>&, vector<int>&);
+void fillidVector(vector< vector<string> >, map<string, int>, int, int[]);
 int checkForErrors(vector<string>&);
-void createNameToIdMap(map<string, int>&, vector<string>);
+int getLevelCount(vector<string>&);
+int getModuleCount(vector<string>&);
+
+vector< vector<int> > ids_of_dependent_modules;
 
 int main(int argc, char *argv[])
 {
@@ -42,10 +46,15 @@ int main(int argc, char *argv[])
         int iterator2;
         int status;
 
+        int *num_deps;
+
         vector<string> lines_from_file;
         vector<string> module_names;
         vector<int> module_level;
         vector<int> num_modules_in_level;
+
+        // A 2D vector.
+        vector< vector<string> > depend_modules;
 
         map<string, int> modulename_to_moduleid_map;
         map<string, int> number_of_dependencies;
@@ -79,23 +88,78 @@ int main(int argc, char *argv[])
          */
         createNameToIdMap(modulename_to_moduleid_map, module_names);
 
-        module_count = getModuleCount(lines_from_file);
-
-        //DEBUG CODE
-        cout << "Levels = " << level_count << endl;
-        cout << "Total number of modules = " << module_count <<endl;
-
-        /*
+         /*
          * The function getDependsOnModulesNumber() obtains the number of modules a perticular
          * module x is dependent on.
          */
         getDependsOnModulesNumber(lines_from_file, module_names, number_of_dependencies);
 
-        for (int i = 0; i < number_of_dependencies.size(); i++) {
-        	cout <<"Module: " <<module_names[i] <<" --> " <<number_of_dependencies[module_names[i]] <<endl;
+        /*
+         * The below block of code is for getting something. too bored and tired to explain.
+         */
+        module_count = getModuleCount(lines_from_file);
+
+        num_deps = (int*) calloc(module_count, sizeof(int));
+
+        // Size the first dimention of the 2D vector of strings.
+        depend_modules.resize(module_count);
+
+        getNumberOfDepends(lines_from_file, num_deps, module_count + level_count);
+
+        // Size the second dimention of the 2D vector of strings.
+        for (iterator = 0; iterator < module_count; iterator++) {
+            depend_modules[iterator].resize(num_deps[iterator] + 1);
         }
 
+        getDependsModuleNames(lines_from_file, depend_modules);
+
+        // This is where i try to get the id's into the vector.
+        fillidVector(depend_modules, modulename_to_moduleid_map, module_count, num_deps);
+
+        fillVector(depend_modules, module_level, module_names, modulename_to_moduleid_map, number_of_dependencies);
+
+        printVector();
+
         return 0;
+}
+
+void fillidVector(vector< vector<string> > dependent_module_names, map<string, int> name_to_id_map, int module_count, int num_deps[])
+{
+    int iterator;
+    int iterator2;
+
+    ids_of_dependent_modules.resize(module_count);
+
+    for (iterator = 0; iterator < module_count; iterator++) {
+        ids_of_dependent_modules[iterator].resize(num_deps[iterator]+1);
+    }
+
+    for (iterator = 0; iterator < ids_of_dependent_modules.size(); iterator++) {
+        for (iterator2 = 0; iterator2 < ids_of_dependent_modules[iterator].size(); iterator2++) {
+            ids_of_dependent_modules[iterator][iterator2] = name_to_id_map[dependent_module_names[iterator][iterator2]];
+        }
+    }
+}
+
+vector<int> getDependentModuleIds(int position)
+{
+    int iterator;
+
+    vector<int> dependent_module_ids;
+
+    for (iterator = 0; iterator < ids_of_dependent_modules[position].size(); iterator++) {
+        if (ids_of_dependent_modules[position].size() == 1)
+            dependent_module_ids.push_back(-1);
+        else {
+            if (iterator == 0)
+                ;
+            else {
+                dependent_module_ids.push_back(ids_of_dependent_modules[position][iterator]);
+            }
+        }
+    }
+
+    return dependent_module_ids;
 }
 
 void getDependsOnModulesNumber(vector<string> lines_from_file, vector<string> module_names, map<string, int> &number_of_dependencies)
