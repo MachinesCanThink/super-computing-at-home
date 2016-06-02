@@ -10,7 +10,12 @@ int discover(string);
 
 int main(int argc, char *argv[]) 
 {
-	discover("192.168.0.1/24");
+	string address;
+
+	cout <<"Enter the IP address of the router" <<endl;
+	cin >>address;
+
+	discover(address);
 
 	return 0;
 }
