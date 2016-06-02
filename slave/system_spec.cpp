@@ -10,19 +10,33 @@
 
 using namespace std;
 
+system_spec specs;
+
 system_spec getSystemSpecs();
 int getNumberOfCores(system_spec&);
 int getHyperthreadingInfo(system_spec&);
 int getTotalMemory(void);
 int getNumberOfPhysicalCores(void);
+int getInstructionsPerSeconds(void);
+int getCpuUtilization(void);
+int getMemoryUtilization(void);
 void initializeSpecStruct(system_spec&);
-
+void prepareSystemSpecDS(void);
 
 void initializeSpecStruct(system_spec &spec)
 {
 	spec.is_hyperthreaded = 0;
 	spec.number_of_cores = -1;
 	spec.total_memory = -1;
+}
+
+int getInstructionsPerSeconds(void)
+{
+	int result;
+
+	result = 0;
+	
+	return result;
 }
 
 int getNumberOfCores(system_spec &spec)
@@ -36,7 +50,6 @@ int getNumberOfCores(system_spec &spec)
 	return 0;
 }
 
-
 int getTotalMemory(system_spec &spec)
 {
 	int total_memory;
@@ -46,11 +59,8 @@ int getTotalMemory(system_spec &spec)
 	int i, j;
 	ifstream input;
 
-	string file_name;
 	string line;
 	string numbers;
-
-	file_name;
 
 	counter = 0;
 
@@ -78,7 +88,53 @@ int getTotalMemory(system_spec &spec)
 
 	spec.total_memory = total_memory / 1024;
 
+	input.close();
+
 	return 1;
+}
+
+// TEST CODE
+int getTotalMemory(void)
+{
+	int total_memory;
+	int counter;
+	int status;
+
+	int i, j;
+	ifstream input;
+
+	string line;
+	string numbers;
+
+	counter = 0;
+
+	input.open("/proc/meminfo", ifstream::in);
+
+	if (input.is_open()) {
+		while(getline(input, line)) {
+			if (counter == 1) {
+				break;
+			}
+
+			string line1 = line;
+
+			for (i = 0, j = 0; i < line1.size(); i++) {
+				if (isdigit(line1[i])) {
+					numbers[j++] = line1[i];
+				}
+			}
+
+			counter++;
+		}
+	}
+
+	total_memory = atoi(numbers.c_str()) / 1024;
+
+	input.close();
+
+	//spec.total_memory = total_memory / 1024;
+
+	return total_memory;
 }
 
 int getNumberOfPhysicalCores(void)
@@ -159,13 +215,73 @@ system_spec getSystemSpecs(void)
 	return spec;
 }
 
-int main(int argc, char *argv[]) 
+void prepareSystemSpecDS(void)
 {
-	system_spec spec;
+	specs = getSystemSpecs();
+}
 
-	spec = getSystemSpecs();
+// The dynamic parameters part. 
+int getCpuUtilization(void)
+{
 
-	cout <<spec.is_hyperthreaded <<endl <<spec.total_memory <<endl <<spec.number_of_cores <<endl;
+}
+
+int getMemoryUtilization(void)
+{
+	ifstream input;
+
+	int line_counter;
+	int i;
+	int j;
+	int total_memory;
+	int free_mem;
+
+	double utilization;
+
+	string free_memory;
+
+	input.open("/proc/meminfo", ifstream::in);
+	line_counter = 0;
+
+	if (input.is_open()) {
+		string line;
+		while(getline(input, line)) {
+			if (line_counter == 0) {
+				;
+			} else if(line_counter == 1) {
+				;
+			} else if (line_counter == 2) {
+				string line1 = line;
+
+				for (i = 0, j = 0; i < line1.size(); i++) {
+					if (isdigit(line1[i])) {
+						free_memory[j++] = line1[i];
+					}
+				}
+			} else {
+				break;
+			}
+
+			line_counter++;
+		}	
+	}
+
+	total_memory = getTotalMemory();
+	cout <<"total memory: " <<total_memory <<endl;
+
+	free_mem = atoi(free_memory.c_str()) / 1024;
+	cout <<"free memory: " <<free_mem <<endl;
+
+	utilization = 1 - (free_mem / total_memory);
+
+	cout <<"utilization: " <<utilization <<endl;
+
+	input.close();
+}
+
+int main() 
+{
+	getMemoryUtilization();
 
 	return 0;
 }

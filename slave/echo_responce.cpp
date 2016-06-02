@@ -15,9 +15,9 @@ using namespace std;
 
 int readFromMaster(int, char*);
 int writeToMaster(int, char*);
-int listenToPingRequestFromMaster(int&);
+int createConnectionWithMaster(int&);
 
-int listenToPingRequestFromMaster(int &socket_fd)
+int createConnectionWithMaster(int &socket_fd)
 {
 	int new_socket_fd;
 	int port_number;

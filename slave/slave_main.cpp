@@ -1,5 +1,7 @@
 #include <iostream>
 #include <cstdlib>
+#include <vector>
+#include <map>
 #include <string>
 #include <cstring>
 #include <unistd.h>
@@ -11,9 +13,18 @@
 
 using namespace std;
 
-extern int listenToPingRequestFromMaster(int&);
+extern int createConnectionWithMaster(int&);
 extern int readFromMaster(int, char*);
 extern int writeToMaster(int, char*);
+extern void prepareSystemSpecDS(void);
+extern int getStaticParams(void);
+
+int function_count;
+int command_type;
+int unique_number;
+int latest_module_id;
+vector<string> function_names_from_cmd;
+map<string, int> fname_to_int_map;
 
 int main(int argc, char *argv[])
 {
@@ -64,11 +75,11 @@ int main(int argc, char *argv[])
 	openlog("slavedaemonprocess", LOG_PID, LOG_DAEMON);
 	syslog(LOG_NOTICE, "Slave daemon started.");
 
-	/* And now, we have a daemon process running. more functionality coming here soon. */
-	if ((socket_fd = listenToPingRequestFromMaster(original_socket)) > -1) {
+	/* And now, we have a daemon process running. 
+	 * Initial connection and response by the salve 
+	 */
+	if ((socket_fd = createConnectionWithMaster(original_socket)) > -1) {
 		syslog(LOG_NOTICE, "master has contacted the slave.");
-
-
 
 		if ((readFromMaster(socket_fd, message)) == -1) {
 			syslog(LOG_NOTICE, "read failed so skipping write");
@@ -76,12 +87,44 @@ int main(int argc, char *argv[])
 			if ((writeToMaster(socket_fd, response_message)) == -1) {
 				syslog(LOG_NOTICE, "write failed. so quitting.");
 			} else {
-				// Make an entry of the master's contact. Close the socket for now.
+				// TODO: Make an entry of the master's contact. 
+				//Close the socket for now.
 				close(socket_fd);
 				close(original_socket);
 			}
 		}
 	}
+
+	// Store the information about the system so that it can be sent to the master on request.
+	/* 
+	 * After this function call the spec DS will have the following information -
+	 * Hyperthreading technology (yes|no)
+	 * Number of cores on the CPU (Logical cores)
+	 * Total memory on the system (in MBs)
+	 */
+	prepareSystemSpecDS();
+
+	getStaticParams();
+
+	/* 
+	 * Now we listen to the master for any command and exectute the command.
+	 * We use a request-reponse model here for communication.
+	 * The request packet is parsed, required data collected and is sent back to the master 
+	 * in a response packet.
+	 */
+	 /*
+	 if ((socket_fd = createConnectionWithMaster(original_socket)) > -1) {
+	 	syslog(LOG_NOTICE, "Master has contacted the slave, again");
+
+	 	if ((readFromMaster(socket_fd, message)) == -1) {
+	 		syslog(LOG_NOTICE, "Read failed when listening for commands");
+	 	} else {
+	 		if ((parseCommandFromMaster(message)) == -1) {
+	 			syslog(LOG_NOTICE, "Invalid command");
+	 		}
+	 	}
+	 }
+	 */
 
 	syslog(LOG_NOTICE, "Slave daemon terminated. Bye bye!");
 
