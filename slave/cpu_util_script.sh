@@ -1,0 +1,1 @@
+mpstat | awk '$3 ~ /CPU/ { for(i=1;i<=NF;i++) { if ($i ~ /%idle/) field=i } } $3 ~ /all/ { printf("%d\n",100 - $field) }' > cpu_util
