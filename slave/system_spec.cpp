@@ -247,17 +247,18 @@ int getMemoryUtilization(void)
 		string line;
 		while(getline(input, line)) {
 			if (line_counter == 0) {
-				;
-			} else if(line_counter == 1) {
-				;
-			} else if (line_counter == 2) {
+				cout <<line <<endl;
+			} else if (line_counter == 1) {
 				string line1 = line;
+				cout <<endl <<line1 <<endl;
 
 				for (i = 0, j = 0; i < line1.size(); i++) {
 					if (isdigit(line1[i])) {
-						free_memory[j++] = line1[i];
+						free_memory.push_back(line1[i]);
 					}
 				}
+
+				cout <<endl <<free_memory <<endl;
 			} else {
 				break;
 			}
@@ -272,7 +273,7 @@ int getMemoryUtilization(void)
 	free_mem = atoi(free_memory.c_str()) / 1024;
 	cout <<"free memory: " <<free_mem <<endl;
 
-	utilization = 1 - (free_mem / total_memory);
+	utilization = 1 - ((double)free_mem / (double)total_memory);
 
 	cout <<"utilization: " <<utilization <<endl;
 
