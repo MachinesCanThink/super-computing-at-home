@@ -11,6 +11,18 @@
 
 using namespace std;
 
+// TEST CODE
+string getStaticParams();
+string getUtilizations();
+string prepareJobFile(int);
+
+/*
+extern int getIdOfTheIncomingModule();
+extern string getStaticParams();
+extern string getUtilizations();
+extern string prepareJobFile(int);
+*/
+
 int parseCommandFromMaster(char*);
 int getFunctionIDFromName(string);
 int getIdOfTheIncomingModule();
@@ -19,10 +31,6 @@ string convertResultToString(int);
 string convertResultToString(double);
 string callFunctionByID(int);
 
-string getStaticParams();
-string getUtilizations();
-string prepareJobFile(int);
-
 void initFunctionNamesMap(void);
 void getFunctionNamesFromCmd(vector<string>);
 
@@ -30,7 +38,6 @@ vector<string> function_names_from_string;
 map<string, int> function_names;
 
 int module_id_latest;
-
 
 void initFunctionNamesMap(void)
 {
@@ -101,20 +108,6 @@ string callFunctionByID(int id)
 	}
 }
 
-/*
-bool isNumber(string number)
-{
-	boost::regex expression{"^-?\\d+"};
-	//boost::match_results<std::string::const_iterator> what;
-
-	if (regex_match{number, expression}) {
-		return true;
-	} else {
-		return false;
-	}
-}
-*/
-
 void getFunctionNamesFromCmd(vector<string> commands)
 {
 	int iterator;
@@ -122,12 +115,6 @@ void getFunctionNamesFromCmd(vector<string> commands)
 
 	for (iterator = 3, iterator2 = 0; iterator < commands.size(); iterator++, iterator2++) {
 		function_names_from_string.push_back(commands.at(iterator));
-	}
-
-	cout <<"Function names:" <<endl;
-
-	for (iterator = 0; iterator < function_names_from_string.size(); iterator++) {
-		cout <<function_names_from_string.at(iterator) <<endl;
 	}
 }
 
@@ -210,9 +197,11 @@ int parseCommandFromMaster(char *message)
     	cout <<"number of functions: " <<num_functions <<endl;	
     }
 
+    // Store the names of the functions in a vector. 
     getFunctionNamesFromCmd(cmd);
 
-    
+    // Initialize the map from function name to ID.
+    initFunctionNamesMap();
 
 	return (int)status;
 }
