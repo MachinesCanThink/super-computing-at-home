@@ -7,10 +7,15 @@
 
 #include "system_spec.h"
 
-string getUtilizations(void);
-int getStaticParams(void);
+using namespace std;
 
-extern system_spec specs;
+extern double getMemoryUtilization(void);
+extern double getCpuUtilization(void);
+
+string getUtilizations(void);
+string getStaticParams(void);
+
+//extern system_spec specs;
 
 string getStaticParams(void)
 {
@@ -20,11 +25,17 @@ string getStaticParams(void)
 
 	string result;
 
+	system_spec specs;
+
+	specs.is_hyperthreaded = true;
+	specs.number_of_cores = 5;
+	specs.total_memory = 8000;
+
 	// The system_spec.cpp program already calcuates this for us and this we need not worry about the helper methods. 
 	// Just filling in the vector here by using struct system_specs defined in system_spec.h file.
-	syslog(LOG_NOTICE, "HTT: %d\n", specs.is_hyperthreaded);
-	syslog(LOG_NOTICE, "number of cores: %d\n", specs.number_of_cores);
-	syslog(LOG_NOTICE, "total memory: %d\n", specs.total_memory);
+	//syslog(LOG_NOTICE, "HTT: %d\n", specs.is_hyperthreaded);
+	//syslog(LOG_NOTICE, "number of cores: %d\n", specs.number_of_cores);
+	//syslog(LOG_NOTICE, "total memory: %d\n", specs.total_memory);
 
 	if (specs.is_hyperthreaded == 1) {
 		hyperthreading_info = "true\n";
@@ -42,7 +53,18 @@ string getStaticParams(void)
 	return result;
 }
 
-int getUtilizations(void)
+string getUtilizations(void)
 {
+	double memory_utilization;
+	double cpu_utilization;
 
+	string utilizations;
+
+	memory_utilization = getMemoryUtilization();
+	cpu_utilization = getCpuUtilization();
+
+	utilizations = to_string(memory_utilization).append("\n").append(to_string(cpu_utilization)).append("\n");
+
+	return utilizations;
 }
+
