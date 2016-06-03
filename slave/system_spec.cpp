@@ -18,8 +18,8 @@ int getHyperthreadingInfo(system_spec&);
 int getTotalMemory(void);
 int getNumberOfPhysicalCores(void);
 int getInstructionsPerSeconds(void);
-int getCpuUtilization(void);
-int getMemoryUtilization(void);
+double getCpuUtilization(void);
+double getMemoryUtilization(void);
 void initializeSpecStruct(system_spec&);
 void prepareSystemSpecDS(void);
 
@@ -93,7 +93,7 @@ int getTotalMemory(system_spec &spec)
 	return 1;
 }
 
-// TEST CODE
+// Overrided method to call when calculating the memory utilization.
 int getTotalMemory(void)
 {
 	int total_memory;
@@ -221,12 +221,39 @@ void prepareSystemSpecDS(void)
 }
 
 // The dynamic parameters part. 
-int getCpuUtilization(void)
+double getCpuUtilization(void)
 {
+	string command;
+	string file_name;
+	string line;
 
+	ifstream input;
+
+	// This is a hack. No time to get it the proper way. Lel
+	command = "sh cpu_util_script.sh";
+
+	file_name = "cpu_util";
+
+	input.open(file_name, ifstream::in);
+
+	// Execute the command and store the value in a file called "cpu_util".
+	system(command.c_str());
+
+	if (input.is_open()) {
+		while(getline(input, line)) {
+
+			break;
+		}
+	}
+
+	double utilization = atoi(line.c_str());
+
+	input.close();
+
+	return utilization;
 }
 
-int getMemoryUtilization(void)
+double getMemoryUtilization(void)
 {
 	ifstream input;
 
@@ -240,6 +267,11 @@ int getMemoryUtilization(void)
 
 	string free_memory;
 
+	/* We open the /proc/meminfo file and obtain the total and free 
+	 * free memory values. 
+	 * utilization = 1 - (free memory / total memory)
+	 */
+
 	input.open("/proc/meminfo", ifstream::in);
 	line_counter = 0;
 
@@ -247,10 +279,10 @@ int getMemoryUtilization(void)
 		string line;
 		while(getline(input, line)) {
 			if (line_counter == 0) {
-				cout <<line <<endl;
+				;
 			} else if (line_counter == 1) {
 				string line1 = line;
-				cout <<endl <<line1 <<endl;
+				//cout <<endl <<line1 <<endl;
 
 				for (i = 0, j = 0; i < line1.size(); i++) {
 					if (isdigit(line1[i])) {
@@ -258,7 +290,7 @@ int getMemoryUtilization(void)
 					}
 				}
 
-				cout <<endl <<free_memory <<endl;
+				//cout <<endl <<free_memory <<endl;
 			} else {
 				break;
 			}
@@ -268,21 +300,13 @@ int getMemoryUtilization(void)
 	}
 
 	total_memory = getTotalMemory();
-	cout <<"total memory: " <<total_memory <<endl;
 
 	free_mem = atoi(free_memory.c_str()) / 1024;
-	cout <<"free memory: " <<free_mem <<endl;
 
 	utilization = 1 - ((double)free_mem / (double)total_memory);
 
-	cout <<"utilization: " <<utilization <<endl;
-
 	input.close();
+
+	return utilization;
 }
 
-int main() 
-{
-	getMemoryUtilization();
-
-	return 0;
-}
