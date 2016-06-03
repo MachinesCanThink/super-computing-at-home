@@ -59,7 +59,8 @@ int main(int argc, char *argv[])
         map<string, int> modulename_to_moduleid_map;
         map<string, int> number_of_dependencies;
 
-        readFileToString(argv[1], lines_from_file); // copies file contents line by line into vector of strings
+        // copies file contents line by line into vector of strings
+        readFileToString(argv[1], lines_from_file); 
 
         /* 
          * Step 1 of parser algorithm.
