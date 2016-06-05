@@ -6,9 +6,10 @@
 
 using namespace std;
 
+int discovered_hosts(void);
 int discover(string);
 
-int main(int argc, char *argv[]) 
+int discover_hosts(void) 
 {
 	string address;
 

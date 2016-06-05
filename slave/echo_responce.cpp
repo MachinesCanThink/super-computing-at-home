@@ -15,12 +15,11 @@ using namespace std;
 
 int readFromMaster(int, char*);
 int writeToMaster(int, char*);
-int createConnectionWithMaster(int&);
+int createConnectionWithMaster(int&, int);
 
-int createConnectionWithMaster(int &socket_fd)
+int createConnectionWithMaster(int &socket_fd, int port_number)
 {
 	int new_socket_fd;
-	int port_number;
 	int socket_status;
 
 	socklen_t master_length;
@@ -36,8 +35,6 @@ int createConnectionWithMaster(int &socket_fd)
 	}
 
 	bzero((char *) &slave_address, sizeof(slave_address));
-
-	port_number = PORT;
 
 	slave_address.sin_family = AF_INET;
 	slave_address.sin_addr.s_addr = INADDR_ANY;
@@ -96,9 +93,7 @@ int writeToMaster(int socket_fd, char *response_message)
 {
 	int socket_status;
 
-	bzero(response_message, 64);
-
-    strcpy(response_message, "CHECK-BACK");
+	
 
 	socket_status = write(socket_fd, response_message, 64);
 

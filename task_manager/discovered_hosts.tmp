@@ -1,0 +1,6 @@
+# Nmap 6.40 scan initiated Sat Jun  4 13:01:49 2016 as: nmap -sP --send-ip -oG discovered_hosts.tmp 192.168.1.1/24
+Host: 192.168.1.1 ()	Status: Up
+Host: 192.168.1.102 ()	Status: Up
+Host: 192.168.1.103 ()	Status: Up
+Host: 192.168.1.108 ()	Status: Up
+# Nmap done at Sat Jun  4 13:02:37 2016 -- 256 IP addresses (4 hosts up) scanned in 47.82 seconds

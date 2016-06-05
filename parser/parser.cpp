@@ -38,7 +38,7 @@ int getModuleCount(vector<string>&);
 
 vector< vector<int> > ids_of_dependent_modules;
 
-int main(int argc, char *argv[])
+int parser(int argc, char *argv[])
 {
         int level_count;
         int module_count;

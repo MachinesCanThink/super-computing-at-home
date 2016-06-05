@@ -13,7 +13,7 @@
 
 using namespace std;
 
-extern int createConnectionWithMaster(int&);
+extern int createConnectionWithMaster(int&, int);
 extern int readFromMaster(int, char*);
 extern int writeToMaster(int, char*);
 extern void prepareSystemSpecDS(void);
@@ -26,7 +26,7 @@ int latest_module_id;
 vector<string> function_names_from_cmd;
 map<string, int> fname_to_int_map;
 
-int main(int argc, char *argv[])
+int main(int argc, char **argv)
 {
 	int pid;
 
@@ -35,6 +35,10 @@ int main(int argc, char *argv[])
 
 	char response_message[64];
 	char message[64];
+
+	int port_number;
+
+	string p_number(argv[1]);
 
 	if ((pid = fork()) < 0) {
 		cout <<"ERROR: error while forking. Slave failed to run." <<endl;
@@ -56,7 +60,7 @@ int main(int argc, char *argv[])
 
 	// Change the working directory to / 
 	if (chdir("/") == -1) {
-		cout <<"ERROR: Cannot set the working dir to '/'. Slave failed to run." <<endl;
+		cout <<"ERROR: Cannot set the working dir to '/'. Slave failed to runn." <<endl;
 
 		return -1;
 	}
@@ -78,12 +82,24 @@ int main(int argc, char *argv[])
 	/* And now, we have a daemon process running. 
 	 * Initial connection and response by the salve 
 	 */
-	if ((socket_fd = createConnectionWithMaster(original_socket)) > -1) {
+
+	 port_number = atoi(p_number.c_str());
+
+	if ((socket_fd = createConnectionWithMaster(original_socket, port_number)) > -1) {
 		syslog(LOG_NOTICE, "master has contacted the slave.");
 
 		if ((readFromMaster(socket_fd, message)) == -1) {
 			syslog(LOG_NOTICE, "read failed so skipping write");
 		} else {
+			// init the systemSpacDS.
+			prepareSystemSpecDS();
+
+			parseCommandFromMaster(message);
+
+			bzero(response_message, 64);
+
+    		strcpy(response_message, "CHECK-BACK");
+
 			if ((writeToMaster(socket_fd, response_message)) == -1) {
 				syslog(LOG_NOTICE, "write failed. so quitting.");
 			} else {
@@ -102,9 +118,9 @@ int main(int argc, char *argv[])
 	 * Number of cores on the CPU (Logical cores)
 	 * Total memory on the system (in MBs)
 	 */
-	prepareSystemSpecDS();
+	
 
-	getStaticParams();
+	//getStaticParams();
 
 	/* 
 	 * Now we listen to the master for any command and exectute the command.

@@ -1,0 +1,1 @@
+./a.out ../test/data/sample.flow

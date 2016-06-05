@@ -35,15 +35,16 @@ void initFunctionNamesMap(void);
 void getFunctionNamesFromCmd(vector<string>);
 
 vector<string> function_names_from_string;
+vector<string> result;
 map<string, int> function_names;
 
 int module_id_latest;
 
 void initFunctionNamesMap(void)
 {
-	function_names["getUtilizations"] = 1;
-	function_names["getStaticParams"] = 2;
-	function_names["prepareJobFile"] = 3;
+	function_names["getutilizations"] = 1;
+	function_names["getstaticparams"] = 2;
+	function_names["preparejobfile"] = 3;
 }
 
 int getIdOfTheIncomingModule(void)
@@ -63,16 +64,6 @@ int getFunctionIDFromName(string function_name)
 string prepareJobFile(int module_id)
 {
 	return "Null";
-}
-
-string getUtilizations()
-{
-	return "Null";
-}
-
-string getStaticParams()
-{
-	return "null";
 }
 
 string callFunctionByID(int id)
@@ -203,12 +194,22 @@ int parseCommandFromMaster(char *message)
     // Initialize the map from function name to ID.
     initFunctionNamesMap();
 
+    for (int i = 0; i < function_names_from_string.size(); i++) {
+    	int id = getFunctionIDFromName(function_names_from_string.at(i));
+
+    	result.push_back(callFunctionByID(id));
+    }
+
+    for (int j = 0; j < result.size(); result++) {
+    	cout <<result <<endl;
+    }
+
 	return (int)status;
 }
 
 int main()
 {
-	char message[] = "REQ\n123\n2\nfunc1\nfun2\n\n";
+	char message[] = "REQ\n1\n\1\ngetstaticparams\n\n";
 
 	//initMessageTypeMap();
 	parseCommandFromMaster(message);
