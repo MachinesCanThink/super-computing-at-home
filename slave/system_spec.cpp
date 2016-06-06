@@ -215,11 +215,6 @@ system_spec getSystemSpecs(void)
 	return spec;
 }
 
-void prepareSystemSpecDS(void)
-{
-	specs = getSystemSpecs();
-}
-
 // The dynamic parameters part. 
 double getCpuUtilization(void)
 {
@@ -308,5 +303,10 @@ double getMemoryUtilization(void)
 	input.close();
 
 	return utilization;
+}
+
+void prepareSystemSpecDS(void)
+{
+	specs = getSystemSpecs();
 }
 
