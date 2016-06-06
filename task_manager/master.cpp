@@ -1,11 +1,13 @@
 #include <iostream>
 #include <cstdlib>
 #include <string>
+/* add other necessary headers*/
 
 extern int parser(int, char*[]);
 extern int discover_hosts(void);
 extern int discover_slaves(void);
 extern sqlite3* slave_db;
+extern void dfDistribute();	// see slaveSelection.cpp 
 
 int main(int argc, char *argv[])
 {
@@ -18,8 +20,7 @@ int main(int argc, char *argv[])
 		cout << "error: sqlite: unable to create db\n";
 	
 	discover_slaves();
-
-
+	dfDistribute();
 
 	return 0;
 }
