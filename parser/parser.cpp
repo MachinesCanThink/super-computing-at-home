@@ -36,7 +36,10 @@ int checkForErrors(vector<string>&);
 int getLevelCount(vector<string>&);
 int getModuleCount(vector<string>&);
 
+int parser(int, char*[]);
+
 vector< vector<int> > ids_of_dependent_modules;
+map<string, int> moduleid_to_modulename_map;
 
 int parser(int argc, char *argv[])
 {
@@ -56,8 +59,9 @@ int parser(int argc, char *argv[])
         // A 2D vector.
         vector< vector<string> > depend_modules;
 
-        map<string, int> modulename_to_moduleid_map;
+        
         map<string, int> number_of_dependencies;
+        map<string, int> modulename_to_moduleid_map;
 
         // copies file contents line by line into vector of strings
         readFileToString(argv[1], lines_from_file); 
@@ -88,6 +92,7 @@ int parser(int argc, char *argv[])
          * Create hashtable of module names and ids first.
          */
         createNameToIdMap(modulename_to_moduleid_map, module_names);
+        initIdtoNameMap(module_names);
 
          /*
          * The function getDependsOnModulesNumber() obtains the number of modules a perticular
@@ -122,6 +127,13 @@ int parser(int argc, char *argv[])
         printVector();
 
         return 0;
+}
+
+void initIdtoNameMap(vector<string> module_names)
+{
+    for (int i = 0; i < module_names.size(); i++) {
+        moduleid_to_modulename_map[i] = module_name[i];
+    }
 }
 
 void fillidVector(vector< vector<string> > dependent_module_names, map<string, int> name_to_id_map, int module_count, int num_deps[])
