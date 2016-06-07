@@ -16,6 +16,61 @@ int readFromSlave(int, char*);
 int createConnectionWithSlave(int, string);
 void requestSlave(string, char[], char[]);
 
+int createResultSocketConnection(int &socket_fd, int port_number)
+{
+    int new_socket_fd;
+    int socket_status;
+
+    socklen_t master_length;
+
+    struct sockaddr_in master_address, slave_address;
+
+    if((socket_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+        syslog(LOG_NOTICE, "Error creating socket");
+
+        return -1;
+    } else {
+        syslog(LOG_NOTICE, "Socket created.");
+    }
+
+    bzero((char *) &slave_address, sizeof(slave_address));
+
+    slave_address.sin_family = AF_INET;
+    slave_address.sin_addr.s_addr = INADDR_ANY;
+    slave_address.sin_port = htons(PORT);
+
+    if ((bind(socket_fd, (struct sockaddr*) &slave_address, sizeof(slave_address))) < 0) {
+        syslog(LOG_NOTICE, "Error on binding.");
+
+        return -1;
+    } else {
+        syslog(LOG_NOTICE, "bind happened.");
+    }
+
+    listen(socket_fd, 5);
+
+    master_length = sizeof(master_address);
+
+    // Now we can taak. 
+    new_socket_fd = accept(socket_fd, (struct sockaddr*) &master_address, &master_length);
+    
+    if (new_socket_fd < 0) {
+        syslog(LOG_NOTICE, "connect failed");
+
+        return -1;
+    } else {
+        syslog(LOG_NOTICE, "connected with the master.");
+
+        return new_socket_fd;
+    }
+
+    //close(socket_fd);
+    //close(new_socket_fd);
+
+    return 1;
+}
+
+
 int writeToSlave(int socket_fd, char* message)
 {
 	int socket_return_value;

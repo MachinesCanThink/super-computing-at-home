@@ -20,6 +20,8 @@ typedef struct node
 
 extern vector<int> getDependentModuleIds(int);
 
+map<string, int> hack_map;
+
 void declareVector(int, vector<int>);
 void printVector(void);
 int fillVector(vector< vector<string> >, vector<int>, vector<string>, map<string, int>, map<string, int>);
@@ -28,6 +30,8 @@ vector<int> num_modules_in_levels;
 int num_levels;
 
 vector< vector<node> >  task_vector;
+
+string getMoudleNamesFromIds()
 
 void declareVector(int level_count, vector<int> modules_in_level) 
 {
