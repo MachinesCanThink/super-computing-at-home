@@ -17,6 +17,49 @@ int readFromMaster(int, char*);
 int writeToMaster(int, char*);
 int createConnectionWithMaster(int&, int);
 
+int createConnectionWithMasterForResults(int socket_fd, string address_non_compatible)
+{
+    struct sockaddr_in slave_address;
+
+    struct hostent *server;
+
+    int port_number;
+    int socket_return_value;
+
+    char *address;
+
+    cout <<"Enter the port number for sending results" <<endl;
+    cin >>port_number;
+
+    // Converts C++ string to C string.
+    address = new char[address_non_compatible.length() + 1];
+    strcpy(address, address_non_compatible.c_str());
+
+    server = gethostbyname(address);
+
+    if (server == NULL) {
+        cout <<"ERROR: No such host : " <<address <<endl;
+        
+        return -1;
+    }
+
+    bzero((char *) &slave_address, sizeof(slave_address));
+
+    slave_address.sin_family = AF_INET;
+
+    bcopy((char *)server->h_addr, (char *) &slave_address.sin_addr.s_addr, server->h_length);
+
+    slave_address.sin_port = htons(port_number);
+
+    if (connect(socket_fd, (struct sockaddr*) &slave_address, sizeof(slave_address)) < 0) {
+        cout <<"ERROR : connect failed for slave : " <<address <<endl;
+
+        return -1;
+    }
+
+    return 1;
+}
+
 int createConnectionWithMaster(int &socket_fd, int port_number)
 {
 	int new_socket_fd;

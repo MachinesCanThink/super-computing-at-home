@@ -1,6 +1,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <vector>
+#include <ifstream>
 #include <map>
 #include <string>
 #include <cstring>
@@ -18,23 +19,49 @@ extern int readFromMaster(int, char*);
 extern int writeToMaster(int, char*);
 extern void prepareSystemSpecDS(void);
 extern int getStaticParams(void);
-
-int function_count;
-int command_type;
-int unique_number;
-int latest_module_id;
+extern int processRequestFromMaster(char*, char*);
+bool is_job;
 vector<string> function_names_from_cmd;
 map<string, int> fname_to_int_map;
+
+void getResultFromFile(char *response)
+{
+	string result;
+	string line;
+	string module_id;
+
+	ifstream input;
+
+	input.open("module_id.scah", ifstream::in);
+
+	getline(input, module_id);
+
+	input.close();
+
+	input.open("result", ifstream::in);
+	
+	result.append(module_id).append("~");
+
+	if (input.is_open()) {
+		while (getline(input, line)) {
+			result.append(line).append("\n");
+		}
+	}
+
+	strcpy(response, result.c_str());
+}
 
 int main(int argc, char **argv)
 {
 	int pid;
 
 	int socket_fd;
+	int result_socket;
+	int result_port;
 	int original_socket;
 
-	char response_message[64];
-	char message[64];
+	char response_message[128];
+	char command[128];
 
 	int port_number;
 
@@ -85,31 +112,55 @@ int main(int argc, char **argv)
 
 	 port_number = atoi(p_number.c_str());
 
-	if ((socket_fd = createConnectionWithMaster(original_socket, port_number)) > -1) {
-		syslog(LOG_NOTICE, "master has contacted the slave.");
+	while (true) {
+	 	if ((socket_fd = createConnectionWithMaster(original_socket, port_number)) > -1) {
+			syslog(LOG_NOTICE, "master has contacted the slave.");
 
-		if ((readFromMaster(socket_fd, message)) == -1) {
-			syslog(LOG_NOTICE, "read failed so skipping write");
-		} else {
-			// init the systemSpacDS.
-			prepareSystemSpecDS();
+			bzero(command, 128);
 
-			parseCommandFromMaster(message);
-
-			bzero(response_message, 64);
-
-    		strcpy(response_message, "CHECK-BACK");
-
-			if ((writeToMaster(socket_fd, response_message)) == -1) {
-				syslog(LOG_NOTICE, "write failed. so quitting.");
+			if ((readFromMaster(socket_fd, command)) == -1) {
+				syslog(LOG_NOTICE, "read failed so skipping write");
 			} else {
-				// TODO: Make an entry of the master's contact. 
-				//Close the socket for now.
-				close(socket_fd);
-				close(original_socket);
+				bzero(response_message, 128);
+
+				processRequestFromMaster(command, response_message);
+
+				if ((writeToMaster(socket_fd, response_message)) == -1) {
+					syslog(LOG_NOTICE, "write failed. so quitting.");
+				} else {
+					// TODO: Make an entry of the master's contact. 
+					//Close the socket for now.
+					close(socket_fd);
+					close(original_socket);
+				}
+			}
+		}
+
+		// Now we create a socket connection here to send the results back to the master.
+		result_socket = socket(AF_INET, SOCK_STREAM, 0);
+
+    	if (result_socket < 0) {
+        	cout <<"Error creating socket" <<endl;
+        	exit(1);
+    	}
+
+    	bzero(response_message, 128);
+
+		while (true) {
+			if ((createConnectionWithMasterForResults(result_socket, address_of_master)) < 0) {
+				syslog(LOG_NOTICE, "socket not open, will try again.");
+			} else {
+				getResultFromFile(response_message);
+				if ((writeToMaster(result_socket, response_message)) == -1) {
+					syslog(LOG_NOTICE, "Error writing back to the slave");
+				}
+
+				break;
 			}
 		}
 	}
+
+	
 
 	// Store the information about the system so that it can be sent to the master on request.
 	/* 

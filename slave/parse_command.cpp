@@ -153,6 +153,28 @@ string getFileNameFromCommand(command_struct command)
 	return command.function_names_from_string.at(1);
 }
 
+void tokenizeJobString(string job_string, vector<string> &job_data)
+{
+	typedef boost::tokenizer< boost::char_separator<char> > tokenizer;
+	boost::char_separator<char> sep{" "};
+
+	tokenizer tok{job_string, sep};
+
+	for (const auto &t : tok) {
+    	job_data.push_back(t);
+    }	
+}
+
+int getModuleIdFromJobVector(vector<string> job_data)
+{
+	return atoi(job_data.at(0).c_str());
+}
+
+string getJobFromJobVector(vector<string> job_data)
+{
+	return job_data.at(1);
+}
+
 string getJobStringFromCommand(command_struct command)
 {
 	return command.function_names_from_string.at(0);
@@ -213,9 +235,9 @@ int executeJob(void)
 	command = "python ";
 
 	file_name = new_job.file_name;
-	result_file = "result_";
+	result_file = "result";
 
-	result_file.append(file_name).append(".scah");
+	//result_file.append(file_name).append(".scah");
 
 	command.append(file_name).append(" > ").append(result_file);
 
@@ -305,10 +327,25 @@ int executeCommandFunctions(command_struct &command)
     		// Have recieved the job now and now we execute the job here by placing the job string in the file.
     		string job_string;
     		string result_string;
+    		string module_id;
+    		string job;
+
+    		vector<string> job_vector;
 
     		job_string = getJobStringFromCommand(command);
 
-    		if (copyJobToFile(job_string)) {
+    		tokenizeJobString(job_string, job_vector);
+
+    		module_id = job_vector.at(0).append(".py");
+    		job = job_vector.at(1);
+
+    		if (createFileForIncomingJob(module_id)) {
+    			syslog(LOG_NOTICE, "File created. Response packet will be created.");
+    			cout <<"File created" <<endl;
+    			status = true;
+    		}
+
+    		if (copyJobToFile(job)) {
     			status = true;
     			syslog(LOG_NOTICE, "Job string copied on to the file");
     		} else {
